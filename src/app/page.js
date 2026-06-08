@@ -65,9 +65,12 @@ export default function Home() {
 
       <BloodPressureForm onAddReading={handleAddReading} />
 
-      {loading ? (
-        <p style={{ textAlign: "center", color: "var(--text-secondary)" }}>Loading trends...</p>
-      ) : (
+      <div style={{ position: 'relative' }}>
+        {loading && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--card-bg)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '20px', backdropFilter: 'blur(2px)' }}>
+            <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Updating...</span>
+          </div>
+        )}
         <BloodPressureChart 
           readings={readings} 
           filter={filter} 
@@ -75,7 +78,7 @@ export default function Home() {
           customRange={customRange} 
           setCustomRange={setCustomRange} 
         />
-      )}
+      </div>
     </div>
   );
 }

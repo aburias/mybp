@@ -52,6 +52,7 @@ const getDiaCategory = (dia) => {
 
 export default function BloodPressureChart({ readings, filter, setFilter, customRange, setCustomRange }) {
   const [chartData, setChartData] = useState(null);
+  const [viewMode, setViewMode] = useState("chart");
 
   useEffect(() => {
     if (!readings || readings.length === 0) {
@@ -127,7 +128,13 @@ export default function BloodPressureChart({ readings, filter, setFilter, custom
   return (
     <div className="glass-card">
       <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '12px' }}>Trends</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0 }}>History & Trends</h2>
+          <div className="view-toggle">
+            <button className={viewMode === 'chart' ? 'active' : ''} onClick={() => setViewMode('chart')}>Graph</button>
+            <button className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')}>List</button>
+          </div>
+        </div>
         
         <div className="chart-filters">
           <button 
@@ -173,29 +180,89 @@ export default function BloodPressureChart({ readings, filter, setFilter, custom
         )}
       </div>
 
-      {chartData ? (
-        <div style={{ height: '300px', width: '100%', marginBottom: '20px' }}>
-          <Line options={options} data={chartData} />
-        </div>
+      {viewMode === 'chart' ? (
+        <>
+          {chartData ? (
+            <div style={{ height: '300px', width: '100%', marginBottom: '20px' }}>
+              <Line options={options} data={chartData} />
+            </div>
+          ) : (
+            <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '40px 0' }}>
+              No readings found for this period.
+            </p>
+          )}
+
+          <div className="legend-container" style={{ justifyContent: 'center', marginBottom: '16px' }}>
+            <div className="legend-item"><div className="legend-color" style={{background: 'var(--primary-color)', borderRadius: '50%'}}></div> Systolic</div>
+            <div className="legend-item">
+              <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '10px solid var(--text-secondary)' }}></div> Diastolic
+            </div>
+          </div>
+
+          <div className="legend-container" style={{ borderTop: '1px solid var(--card-border)', paddingTop: '16px', justifyContent: 'center' }}>
+            <div className="legend-item"><div className="legend-color" style={{background: 'var(--success-color)'}}></div> Normal</div>
+            <div className="legend-item"><div className="legend-color" style={{background: 'var(--warning-color)'}}></div> Elevated/Stage 1</div>
+            <div className="legend-item"><div className="legend-color" style={{background: 'var(--danger-color)'}}></div> Stage 2</div>
+            <div className="legend-item"><div className="legend-color" style={{background: 'var(--crisis-color)'}}></div> Crisis</div>
+          </div>
+        </>
       ) : (
-        <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '40px 0' }}>
-          No readings found for this period.
-        </p>
-      )}
+        <div className="list-view">
+          {(() => {
+            const sortedReadings = [...readings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            const groupedReadings = [];
+            sortedReadings.forEach(r => {
+              const dateStr = format(new Date(r.createdAt), "EEEE, MMM d, yyyy");
+              const lastGroup = groupedReadings[groupedReadings.length - 1];
+              if (lastGroup && lastGroup.dateStr === dateStr) {
+                lastGroup.items.push(r);
+              } else {
+                groupedReadings.push({ dateStr, items: [r] });
+              }
+            });
 
-      <div className="legend-container" style={{ justifyContent: 'center', marginBottom: '16px' }}>
-        <div className="legend-item"><div className="legend-color" style={{background: 'var(--primary-color)'}}></div> Systolic</div>
-        <div className="legend-item">
-          <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '10px solid var(--text-secondary)' }}></div> Diastolic
+            if (groupedReadings.length === 0) {
+              return (
+                <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '40px 0' }}>
+                  No readings found for this period.
+                </p>
+              );
+            }
+
+            return groupedReadings.map((group, idx) => (
+              <div key={idx} className="list-group" style={{ marginBottom: '20px' }}>
+                <div style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', marginBottom: '12px', fontWeight: '600', color: 'var(--text-primary)', borderBottom: '1px solid var(--card-border)' }}>
+                  {group.dateStr}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {group.items.map(r => (
+                    <div key={r.id} className="list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: 'rgba(0,0,0,0.1)', borderRadius: '12px', borderLeft: `4px solid ${getSysCategory(r.systolic).color}`, boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)' }}>
+                      <div>
+                        <div style={{ fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '500' }}>{format(new Date(r.createdAt), "h:mm a")}</div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>{getSysCategory(r.systolic).label}</div>
+                      </div>
+                      <div style={{ textAlign: 'right', display: 'flex', gap: '24px' }}>
+                        <div>
+                          <div style={{ color: getSysCategory(r.systolic).color, fontWeight: 'bold', fontSize: '1.35rem' }}>
+                            {r.systolic}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Sys</div>
+                        </div>
+                        <div>
+                          <div style={{ color: getDiaCategory(r.diastolic).color, fontWeight: 'bold', fontSize: '1.35rem' }}>
+                            {r.diastolic}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Dia</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
-      </div>
-
-      <div className="legend-container" style={{ borderTop: '1px solid var(--card-border)', paddingTop: '16px', justifyContent: 'center' }}>
-        <div className="legend-item"><div className="legend-color" style={{background: 'var(--success-color)'}}></div> Normal</div>
-        <div className="legend-item"><div className="legend-color" style={{background: 'var(--warning-color)'}}></div> Elevated/Stage 1</div>
-        <div className="legend-item"><div className="legend-color" style={{background: 'var(--danger-color)'}}></div> Stage 2</div>
-        <div className="legend-item"><div className="legend-color" style={{background: 'var(--crisis-color)'}}></div> Crisis</div>
-      </div>
+      )}
     </div>
   );
 }
