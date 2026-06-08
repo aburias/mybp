@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: mybp-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mybp
+    ports:
+      - "5440:5432"
+    volumes:
+      - mybp_pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: mybp-app
+    restart: always
+    ports:
+      - "4000:4000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/mybp?schema=public
+    depends_on:
+      - db
+
+volumes:
+  mybp_pgdata:

@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Blood Pressure Tracker
 
-## Getting Started
+A premium, mobile-first web application designed to help you securely track and visualize your blood pressure and cardiovascular health over time. 
 
-First, run the development server:
+Built with modern web technologies and designed for immediate containerized deployment, this application categorizes your readings strictly based on the American Heart Association (AHA) guidelines.
 
+## Features
+
+- **Intuitive Logging:** Quickly log your Systolic and Diastolic pressure.
+- **AHA Categorization:** Automatically categorizes both your Systolic and Diastolic numbers independently into AHA stages (Normal, Elevated, Stage 1, Stage 2, Crisis) with intuitive color-coding.
+- **Interactive Trends:** Visualize your health with dynamic line charts.
+- **Advanced Filtering:** Filter your data by 'This Week', 'This Month', 'All Time', or use a Custom Date Range.
+- **Premium Aesthetics:** Features a modern dark-mode, glassmorphism UI with subtle gradients.
+- **Fully Dockerized:** Both the Next.js application and the PostgreSQL database are bundled in Docker for instant, painless local setup.
+
+## Tech Stack
+
+- **Frontend / Backend:** Next.js 15 (App Router), React
+- **Styling:** CSS Modules, Modern CSS (Flexbox, CSS Variables, Glassmorphism)
+- **Charts:** Chart.js, `react-chartjs-2`
+- **Database:** PostgreSQL 15
+- **ORM:** Prisma
+- **Deployment:** Docker & Docker Compose
+
+## Getting Started (Local Setup)
+
+The application is fully containerized. You only need Docker installed on your machine.
+
+### 1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/blood-pressure-tracker.git
+cd blood-pressure-tracker
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Set up Environment Variables
+Create a `.env` file in the root of your project:
+```env
+# This URL is used for your local Prisma setup to reach the dockerized database
+DATABASE_URL="postgresql://postgres:password@127.0.0.1:5440/mybp?schema=public"
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### 3. Spin up the Database
+First, start only the PostgreSQL database container so that we can apply our database schema:
+```bash
+docker-compose up -d db
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Apply the Database Schema
+Ensure you have Node.js installed locally to run Prisma commands. Install the dependencies and push the schema to your fresh database:
+```bash
+npm install
+npx prisma db push
+```
 
-## Learn More
+### 5. Build and Start the Application
+Now, build the Next.js app image and spin everything up together!
+```bash
+docker-compose up -d --build
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 6. View the App
+Open your browser and navigate to:
+[http://localhost:4000](http://localhost:4000)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Security Warning for Production Deployment
 
-## Deploy on Vercel
+The `docker-compose.yml` included in this repository contains default credentials (`POSTGRES_PASSWORD: password`) intended **only** for quick local development and testing. 
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+If you plan to deploy this application to a public server or production environment:
+1. Change the database password in both your `docker-compose.yml` and `.env` files.
+2. Consider removing the hardcoded environment variables from `docker-compose.yml` entirely and referencing them securely from your server environment.

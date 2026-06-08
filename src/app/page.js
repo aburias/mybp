@@ -1,66 +1,81 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { useState, useEffect } from "react";
+import BloodPressureForm from "@/components/BloodPressureForm";
+import BloodPressureChart from "@/components/BloodPressureChart";
+import { format, subDays, startOfMonth } from "date-fns";
 
 export default function Home() {
+  const [readings, setReadings] = useState([]);
+  const [filter, setFilter] = useState("all");
+  const [customRange, setCustomRange] = useState({
+    from: format(subDays(new Date(), 7), "yyyy-MM-dd"),
+    to: format(new Date(), "yyyy-MM-dd")
+  });
+  const [loading, setLoading] = useState(true);
+
+  const fetchReadings = async () => {
+    setLoading(true);
+    let url = "/api/readings";
+
+    if (filter === "week") {
+      const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const to = new Date().toISOString();
+      url += `?from=${from}&to=${to}`;
+    } else if (filter === "month") {
+      const from = startOfMonth(new Date()).toISOString();
+      const to = new Date().toISOString();
+      url += `?from=${from}&to=${to}`;
+    } else if (filter === "custom") {
+      const fromDate = new Date(customRange.from);
+      const toDate = new Date(customRange.to);
+      toDate.setHours(23, 59, 59, 999);
+      url += `?from=${fromDate.toISOString()}&to=${toDate.toISOString()}`;
+    }
+
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setReadings(data);
+      }
+    } catch (error) {
+      console.error("Error fetching readings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReadings();
+  }, [filter, customRange]);
+
+  const handleAddReading = (newReading) => {
+    fetchReadings();
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="container">
+      <div className="bg-gradient"></div>
+      
+      <div className="header">
+        <h1>Blood Pressure Tracker</h1>
+        <p>Monitor your cardiovascular health simply and securely.</p>
+      </div>
+
+      <BloodPressureForm onAddReading={handleAddReading} />
+
+      {loading ? (
+        <p style={{ textAlign: "center", color: "var(--text-secondary)" }}>Loading trends...</p>
+      ) : (
+        <BloodPressureChart 
+          readings={readings} 
+          filter={filter} 
+          setFilter={setFilter} 
+          customRange={customRange} 
+          setCustomRange={setCustomRange} 
         />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      )}
     </div>
   );
 }
