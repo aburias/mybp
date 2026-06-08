@@ -77,6 +77,7 @@ export default function Home() {
           setFilter={setFilter} 
           customRange={customRange} 
           setCustomRange={setCustomRange} 
+          onDelete={fetchReadings}
         />
       </div>
     </div>

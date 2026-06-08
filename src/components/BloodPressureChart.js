@@ -50,9 +50,25 @@ const getDiaCategory = (dia) => {
   return { label: 'Normal', color: CHART_COLORS.success };
 };
 
-export default function BloodPressureChart({ readings, filter, setFilter, customRange, setCustomRange }) {
+export default function BloodPressureChart({ readings, filter, setFilter, customRange, setCustomRange, onDelete }) {
   const [chartData, setChartData] = useState(null);
   const [viewMode, setViewMode] = useState("chart");
+  const [deletingId, setDeletingId] = useState(null);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this reading?")) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/readings/${id}`, { method: 'DELETE' });
+      if (res.ok && onDelete) {
+        onDelete();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!readings || readings.length === 0) {
@@ -241,7 +257,7 @@ export default function BloodPressureChart({ readings, filter, setFilter, custom
                         <div style={{ fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '500' }}>{format(new Date(r.createdAt), "h:mm a")}</div>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>{getSysCategory(r.systolic).label}</div>
                       </div>
-                      <div style={{ textAlign: 'right', display: 'flex', gap: '24px' }}>
+                      <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <div>
                           <div style={{ color: getSysCategory(r.systolic).color, fontWeight: 'bold', fontSize: '1.35rem' }}>
                             {r.systolic}
@@ -254,6 +270,14 @@ export default function BloodPressureChart({ readings, filter, setFilter, custom
                           </div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Dia</div>
                         </div>
+                        <button 
+                          onClick={() => handleDelete(r.id)}
+                          disabled={deletingId === r.id}
+                          style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: 'var(--danger-color)', cursor: deletingId === r.id ? 'not-allowed' : 'pointer', opacity: deletingId === r.id ? 0.5 : 1, padding: '8px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '4px' }}
+                          title="Delete reading"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                        </button>
                       </div>
                     </div>
                   ))}
