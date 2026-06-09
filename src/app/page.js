@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import BloodPressureForm from "@/components/BloodPressureForm";
 import BloodPressureChart from "@/components/BloodPressureChart";
+import AIInsightsTab from "@/components/AIInsightsTab";
 import { format, subDays, startOfMonth } from "date-fns";
 
 export default function Home() {
   const [readings, setReadings] = useState([]);
+  const [activeTab, setActiveTab] = useState("tracker");
   const [filter, setFilter] = useState("all");
   const [customRange, setCustomRange] = useState({
     from: format(subDays(new Date(), 7), "yyyy-MM-dd"),
@@ -63,23 +65,44 @@ export default function Home() {
         <p>Monitor your cardiovascular health simply and securely.</p>
       </div>
 
-      <BloodPressureForm onAddReading={handleAddReading} />
-
-      <div style={{ position: 'relative' }}>
-        {loading && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--card-bg)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '20px', backdropFilter: 'blur(2px)' }}>
-            <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Updating...</span>
-          </div>
-        )}
-        <BloodPressureChart 
-          readings={readings} 
-          filter={filter} 
-          setFilter={setFilter} 
-          customRange={customRange} 
-          setCustomRange={setCustomRange} 
-          onDelete={fetchReadings}
-        />
+      <div className="main-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '24px', justifyContent: 'center' }}>
+        <button 
+          className={`tab-btn ${activeTab === 'tracker' ? 'active' : ''}`}
+          onClick={() => setActiveTab('tracker')}
+        >
+          📊 Tracker
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'ai' ? 'active' : ''}`}
+          onClick={() => setActiveTab('ai')}
+        >
+          ✨ AI Insights
+        </button>
       </div>
+
+      {activeTab === 'tracker' ? (
+        <>
+          <BloodPressureForm onAddReading={handleAddReading} />
+
+          <div style={{ position: 'relative' }}>
+            {loading && (
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--card-bg)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '20px', backdropFilter: 'blur(2px)' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Updating...</span>
+              </div>
+            )}
+            <BloodPressureChart 
+              readings={readings} 
+              filter={filter} 
+              setFilter={setFilter} 
+              customRange={customRange} 
+              setCustomRange={setCustomRange} 
+              onDelete={fetchReadings}
+            />
+          </div>
+        </>
+      ) : (
+        <AIInsightsTab readings={readings} />
+      )}
     </div>
   );
 }
