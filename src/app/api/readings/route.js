@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { systolic, diastolic } = body;
+    const { systolic, diastolic, pulse } = body;
 
     if (!systolic || !diastolic) {
       return NextResponse.json({ error: 'Systolic and Diastolic values are required.' }, { status: 400 });
@@ -14,6 +14,7 @@ export async function POST(request) {
       data: {
         systolic: parseInt(systolic),
         diastolic: parseInt(diastolic),
+        pulse: pulse ? parseInt(pulse) : null,
       },
     });
 

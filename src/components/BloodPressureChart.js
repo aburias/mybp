@@ -270,6 +270,14 @@ export default function BloodPressureChart({ readings, filter, setFilter, custom
                           </div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Dia</div>
                         </div>
+                        {r.pulse && (
+                          <div>
+                            <div style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '1.35rem' }}>
+                              {r.pulse}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Pulse</div>
+                          </div>
+                        )}
                         <button 
                           onClick={() => handleDelete(r.id)}
                           disabled={deletingId === r.id}

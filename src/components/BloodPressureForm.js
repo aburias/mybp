@@ -6,6 +6,7 @@ import { Activity } from "lucide-react";
 export default function BloodPressureForm({ onAddReading }) {
   const [systolic, setSystolic] = useState("");
   const [diastolic, setDiastolic] = useState("");
+  const [pulse, setPulse] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,7 +25,7 @@ export default function BloodPressureForm({ onAddReading }) {
       const res = await fetch("/api/readings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ systolic, diastolic }),
+        body: JSON.stringify({ systolic, diastolic, pulse: pulse || null }),
       });
 
       if (!res.ok) throw new Error("Failed to save reading");
@@ -34,6 +35,7 @@ export default function BloodPressureForm({ onAddReading }) {
       
       setSystolic("");
       setDiastolic("");
+      setPulse("");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -74,6 +76,18 @@ export default function BloodPressureForm({ onAddReading }) {
               placeholder="80"
               min="30"
               max="150"
+            />
+          </div>
+          <div className="form-group flex-1">
+            <label>Pulse (bpm)</label>
+            <input
+              type="number"
+              className="form-input"
+              value={pulse}
+              onChange={(e) => setPulse(e.target.value)}
+              placeholder="70"
+              min="30"
+              max="200"
             />
           </div>
         </div>

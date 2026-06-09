@@ -11,5 +11,6 @@ model Reading {
   id        String   @id @default(uuid())
   systolic  Int
   diastolic Int
+  pulse     Int?
   createdAt DateTime @default(now())
 }
